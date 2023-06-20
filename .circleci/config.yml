@@ -21,7 +21,7 @@ jobs:
 
             echo "--------- The images - Building ------------"
             
-            docker build -t todoapp-frontend -f ./..
+            docker build -t todoapp-frontend -f .
             docker tag todoapp-frontend thanhtt9900/todoapp-frontend:latest
 
             echo " ------- login in to hub--------"
