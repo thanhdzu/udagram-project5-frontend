@@ -7,6 +7,10 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY . .
 
+RUN rm -fr node_modules
+
+COPY package*.json ./
+
 RUN npm install
 
 RUN npm run build
