@@ -26,7 +26,7 @@ jobs:
 
             echo " ------- login in to hub--------"
 
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker login -u thanhtt9900 -p $DOCKERHUB_PASSWORD
 
             echo "-------------- Pushing images to dockerhub-------"
             
