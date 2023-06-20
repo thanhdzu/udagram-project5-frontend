@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  lint-app-microservices:
+  lint-app-frontend:
     docker:
       - image: circleci/node:14
     steps:
@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Build docker container - microservices
+          name: Build docker container
           command: |
             echo "--------- The images - Building ------------"
             
