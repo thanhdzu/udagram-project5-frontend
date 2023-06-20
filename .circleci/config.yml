@@ -1,21 +1,40 @@
-# This config is equivalent to both the '.circleci/extended/orb-free.yml' and the base '.circleci/config.yml'
 version: 2.1
 
-# Orbs are reusable packages of CircleCI configuration that you may share across projects, enabling you to create encapsulated, parameterized commands, jobs, and executors that can be used across multiple projects.
-# See: https://circleci.com/docs/orb-intro/
-orbs:
-  node: circleci/node@4.7
+jobs:
+  lint-app-microservices:
+    docker:
+      - image: circleci/node:12.22
+    steps:
+      - checkout
+  build-docker:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build docker container - microservices
+          command: |
+            echo "------------------ Installing dependencies---------------------------"
+            sudo curl -LO https://nodejs.org/dist/v12.22.11/node-v12.22.11-linux-x64.tar.xz
+            sudo tar -xvf node-v12.22.11-linux-x64.tar.xz
+            sudo cp -r node-v12.22.11-linux-x64/{bin,include,lib,share} /usr/
+            node --version => v
+            sudo apt install nodejs
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/configuration-reference/#workflows
+            echo "--------- The images - Building ------------"
+            
+            docker build -t todoapp-frontend ./../
+            docker tag todoapp-frontend thanhtt9900/todoapp-frontend:latest
+
+            echo " ------- login in to hub--------"
+
+            docker login -u "$DOCKER_USERNAME" -p $DOCKERHUB_PASSWORD
+
+            echo "-------------- Pushing images to dockerhub-------"
+            
+            docker push thanhtt9900/todoapp-frontend:latest
 workflows:
-  sample: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  default:
     jobs:
-      - node/test:
-          # This is the node version to use for the `cimg/node` tag
-          # Relevant tags can be found on the CircleCI Developer Hub
-          # https://circleci.com/developer/images/image/cimg/node
-          version: '16.10'
-          # If you are using yarn, change the line below from "npm" to "yarn"
-          pkg-manager: npm
+      - lint-app-microservices
+      - build-docker:
+          requires: [lint-app-microservices]
