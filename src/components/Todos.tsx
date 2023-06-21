@@ -14,7 +14,7 @@ import {
   Loader
 } from 'semantic-ui-react'
 
-import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
+import { createTodo, deleteTodo, getTodos, patchTodo, getMoreTodos } from '../api/todos-api'
 import Auth from '../auth/Auth'
 import { Todo } from '../types/Todo'
 
@@ -27,13 +27,15 @@ interface TodosState {
   todos: Todo[]
   newTodoName: string
   loadingTodos: boolean
+  nextKey: any
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
   state: TodosState = {
     todos: [],
     newTodoName: '',
-    loadingTodos: true
+    loadingTodos: true,
+    nextKey: null
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,6 +59,22 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       })
     } catch {
       alert('Todo creation failed')
+    }
+  }
+
+  onTodoMore = async () => {
+    try {
+      this.setState({
+        loadingTodos: true
+      })
+      const moreTodos = await getMoreTodos(this.props.auth.getIdToken(), this.state.nextKey)
+      this.setState({
+        todos: [...this.state.todos, ...moreTodos.todos],
+        nextKey: moreTodos.nextKey,
+        loadingTodos: false
+      })
+    } catch {
+      alert('Todo more failed')
     }
   }
 
@@ -93,8 +111,9 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     try {
       const todos = await getTodos(this.props.auth.getIdToken())
       this.setState({
-        todos,
-        loadingTodos: false
+        todos: todos.todos,
+        loadingTodos: false,
+        nextKey: todos.nextKey
       })
     } catch (e) {
       alert(`Failed to fetch todos: ${(e as Error).message}`)
@@ -109,6 +128,10 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         {this.renderCreateTodoInput()}
 
         {this.renderTodos()}
+        
+        {this.renderLoading()}
+
+        {this.renderMoreTodos()}
       </div>
     )
   }
@@ -139,21 +162,35 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   }
 
   renderTodos() {
-    if (this.state.loadingTodos) {
-      return this.renderLoading()
-    }
-
     return this.renderTodosList()
   }
 
-  renderLoading() {
+  renderMoreTodos() {
     return (
       <Grid.Row>
-        <Loader indeterminate active inline="centered">
-          Loading TODOs
-        </Loader>
+        {this.state.nextKey && (
+          <Button
+            icon
+            color="blue"
+            onClick={() => this.onTodoMore()}
+          >
+            More
+          </Button>
+        )}
       </Grid.Row>
     )
+  }
+
+  renderLoading() {    
+    if (this.state.loadingTodos) {
+      return (
+        <Grid.Row>
+          <Loader indeterminate active inline="centered">
+            Loading TODOs
+          </Loader>
+        </Grid.Row>
+      )
+    }
   }
 
   renderTodosList() {

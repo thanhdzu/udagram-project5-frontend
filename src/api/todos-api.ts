@@ -3,18 +3,20 @@ import { Todo } from '../types/Todo';
 import { CreateTodoRequest } from '../types/CreateTodoRequest';
 import Axios from 'axios'
 import { UpdateTodoRequest } from '../types/UpdateTodoRequest';
+import { PageableTodos } from '../types/PageableTodos';
 
-export async function getTodos(idToken: string): Promise<Todo[]> {
+
+export async function getTodos(idToken: string, limit = 1): Promise<PageableTodos> {
   console.log('Fetching todos')
 
-  const response = await Axios.get(`${apiEndpoint}/todos`, {
+  const response = await Axios.get(`${apiEndpoint}/todos?limit=${limit}`, {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
     },
   })
   console.log('Todos:', response.data)
-  return response.data.items
+  return { todos: response.data.items, nextKey: response.data.nextKey }
 }
 
 export async function createTodo(
@@ -35,7 +37,7 @@ export async function patchTodo(
   todoId: string,
   updatedTodo: UpdateTodoRequest
 ): Promise<void> {
-  await Axios.patch(`${apiEndpoint}/todos/${todoId}`, JSON.stringify(updatedTodo), {
+  await Axios.put(`${apiEndpoint}/todos/${todoId}`, JSON.stringify(updatedTodo), {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
@@ -70,4 +72,17 @@ export async function getUploadUrl(
 
 export async function uploadFile(uploadUrl: string, file: Buffer): Promise<void> {
   await Axios.put(uploadUrl, file)
+}
+
+export async function getMoreTodos(idToken: string, nextKey?: string, limit = 1): Promise<PageableTodos> {
+  console.log('Fetching todos')
+
+  const response = await Axios.get(`${apiEndpoint}/todos?limit=${limit}&nextKey=${nextKey}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    },
+  })
+  console.log('More Todos:', response.data)
+  return { todos: response.data.items, nextKey: response.data.nextKey }
 }
