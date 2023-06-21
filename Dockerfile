@@ -26,6 +26,6 @@ WORKDIR /www/data
 # Create app directory
 RUN mv /usr/src/app/build/* /www/data/. && rm -rf /usr/src/app
 
-EXPOSE 8080
+EXPOSE 80
 
 CMD ["nginx"]
